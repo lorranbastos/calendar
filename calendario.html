@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Calendário de Tarefas</title>
+  <style>
+    body { font-family: Arial; background: #fafafa; padding: 20px; text-align: center; }
+    h1 { margin-bottom: 20px; }
+    .nav { margin-bottom: 10px; }
+    .nav button { margin: 0 5px; cursor: pointer; }
+    .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: auto; }
+    .dia { background: #fff; padding: 10px; cursor: pointer; border-radius: 8px; position: relative; min-height: 50px; transition: 0.2s; }
+    .dia:hover { background: #1d28a1; color: white; transform: scale(1.05); }
+    .feriado { background: #a1c4fd; } 
+    .vazio { background: transparent; cursor: default; }
+    .indic { font-size: 12px; background: #1d28a1; color: white; border-radius: 10px; padding: 2px 5px; position: absolute; bottom: 5px; right: 5px; }
+    #tarefas { display: none; background: #f2f2f2; padding: 15px; border-radius: 8px; max-width: 350px; margin: 20px auto; text-align: left; }
+    #tarefas input { padding: 5px; width: 70%; }
+    #tarefas button { cursor: pointer; }
+    li { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 5px; border-radius: 5px; background: #fff; transition: 0.3s; }
+    li.editado { background: #e2f7e1; } 
+    li.novo { background: #dbeafe; } 
+    .acoes button { margin-left: 5px; }
+    #mensagem { margin-top: 10px; font-size: 14px; font-weight: bold; color: #1d28a1; display: none; }
+    #feriado { margin-top: 10px; font-size: 14px; font-weight: bold; color: #d62828; }
+  </style>
+</head>
+<body>
+
+  <h1>📅Calendário de Tarefas</h1>
+
+  <div class="nav">
+    <button onclick="mesAnt()">⬅️</button>
+    <span id="mesAno">Mês/Ano</span>
+    <button onclick="mesProx()">➡️</button>
+  </div>
+
+  <div class="cal" id="calendario"></div>
+
+  <div id="tarefas">
+    <h3 id="diaSelecionado">Dia X</h3>
+    <div id="feriado"></div>
+    <input type="text" id="novaTarefa" placeholder="Nova tarefa...">
+    <button onclick="adicionarTarefa()">Adicionar</button>
+    <ul id="listaTarefas"></ul>
+    <div id="mensagem"></div>
+  </div>
+
+  <script>
+    const cal = document.getElementById("calendario");
+    const tarefasDiv = document.getElementById("tarefas");
+    const diaSel = document.getElementById("diaSelecionado");
+    const lista = document.getElementById("listaTarefas");
+    const input = document.getElementById("novaTarefa");
+    const mesAno = document.getElementById("mesAno");
+    const msg = document.getElementById("mensagem");
+    const feriadoDiv = document.getElementById("feriado");
+
+    let dados = JSON.parse(localStorage.getItem("minhasTarefas")) || {};
+    let hoje = new Date();
+    let mesAtual = hoje.getMonth();
+    let anoAtual = hoje.getFullYear();
+    let diaAtual = null;
+
+    const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+    function calcularPascoa(ano) {
+      const a = ano % 19;
+      const b = Math.floor(ano / 100);
+      const c = ano % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const mes = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+      const dia = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(ano, mes, dia);
+    }
+
+    function getFeriados(ano) {
+      const pascoa = calcularPascoa(ano);
+      const carnaval = new Date(pascoa); carnaval.setDate(pascoa.getDate() - 47);
+      const sextaSanta = new Date(pascoa); sextaSanta.setDate(pascoa.getDate() - 2);
+      const corpusChristi = new Date(pascoa); corpusChristi.setDate(pascoa.getDate() + 60);
+
+      return {
+        [`${ano}-1-1`]: "Confraternização Universal",
+        [`${ano}-4-21`]: "Tiradentes",
+        [`${ano}-5-1`]: "Dia do Trabalho",
+        [`${ano}-9-7`]: "Independência do Brasil",
+        [`${ano}-10-12`]: "Nossa Senhora Aparecida",
+        [`${ano}-11-2`]: "Finados",
+        [`${ano}-11-15`]: "Proclamação da República",
+        [`${ano}-12-25`]: "Natal",
+        [`${ano}-${carnaval.getMonth()+1}-${carnaval.getDate()}`]: "Carnaval",
+        [`${ano}-${sextaSanta.getMonth()+1}-${sextaSanta.getDate()}`]: "Sexta-feira Santa",
+        [`${ano}-${pascoa.getMonth()+1}-${pascoa.getDate()}`]: "Páscoa",
+        [`${ano}-${corpusChristi.getMonth()+1}-${corpusChristi.getDate()}`]: "Corpus Christi"
+      };
+    }
+
+    function desenharCalendario() {
+      cal.innerHTML = "";
+      mesAno.innerText = meses[mesAtual]+" "+anoAtual;
+
+      const feriadosAno = getFeriados(anoAtual);
+
+      diasSemana.forEach(d => {
+        const div = document.createElement("div");
+        div.innerText = d;
+        cal.appendChild(div);
+      });
+
+      const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
+      const diasNoMes = new Date(anoAtual, mesAtual+1, 0).getDate();
+
+      for(let i=0; i<primeiroDia; i++){
+        const div = document.createElement("div");
+        div.classList.add("dia","vazio");
+        cal.appendChild(div);
+      }
+
+      for(let i=1; i<=diasNoMes; i++){
+        const div = document.createElement("div");
+        div.classList.add("dia");
+        div.innerText = i;
+
+        const chave = `${anoAtual}-${mesAtual+1}-${i}`;
+        if(dados[chave] && dados[chave].length>0){
+          const indic = document.createElement("div");
+          indic.classList.add("indic");
+          indic.innerText = dados[chave].length;
+          div.appendChild(indic);
+        }
+
+        if(feriadosAno[chave]) div.classList.add("feriado"); // adiciona fundo azul claro para feriado
+
+        div.onclick = () => abrirDia(i);
+        cal.appendChild(div);
+      }
+    }
+
+    function abrirDia(dia){
+      diaAtual = dia;
+      diaSel.innerText = `Dia ${dia}`;
+      tarefasDiv.style.display = "block";
+
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      const feriadosAno = getFeriados(anoAtual);
+      feriadoDiv.innerText = feriadosAno[chave] ? "🎉 " + feriadosAno[chave] : "";
+
+      mostrarTarefas();
+    }
+
+    function mostrarTarefas(){
+      lista.innerHTML = "";
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      (dados[chave] || []).forEach((t, i)=>{
+        const li = document.createElement("li");
+        const span = document.createElement("span");
+        span.innerText = t;
+
+        const acoes = document.createElement("div");
+        acoes.classList.add("acoes");
+
+        const btnEditar = document.createElement("button");
+        btnEditar.innerText = "✏️";
+        btnEditar.onclick = () => editarTarefa(i, span, li);
+
+        const btnExcluir = document.createElement("button");
+        btnExcluir.innerText = "❌";
+        btnExcluir.onclick = () => removerTarefa(i);
+
+        acoes.appendChild(btnEditar);
+        acoes.appendChild(btnExcluir);
+
+        li.appendChild(span);
+        li.appendChild(acoes);
+        lista.appendChild(li);
+      });
+    }
+
+    function adicionarTarefa(){
+      const texto = input.value.trim();
+      if(!texto) return;
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      if(!dados[chave]) dados[chave] = [];
+      dados[chave].push(texto);
+      input.value = "";
+      salvar("Tarefa adicionada!", true);
+    }
+
+    function editarTarefa(index, span, li){
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      const antigoTexto = dados[chave][index];
+
+      const inputEdicao = document.createElement("input");
+      inputEdicao.type = "text";
+      inputEdicao.value = antigoTexto;
+      span.replaceWith(inputEdicao);
+      inputEdicao.focus();
+
+      inputEdicao.addEventListener("keydown", e=>{
+        if(e.key === "Enter") salvarEdicao(index, inputEdicao.value, li);
+      });
+      inputEdicao.addEventListener("blur", ()=>{
+        salvarEdicao(index, inputEdicao.value, li);
+      });
+    }
+
+    function salvarEdicao(index, novoTexto, li){
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      if(novoTexto.trim() !== ""){
+        dados[chave][index] = novoTexto.trim();
+        li.classList.add("editado");
+        salvar("Tarefa editada!");
+      } else {
+        removerTarefa(index);
+      }
+    }
+
+    function removerTarefa(i){
+      const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
+      dados[chave].splice(i,1);
+      salvar("Tarefa removida!");
+    }
+
+    function salvar(texto="", nova=false){
+      localStorage.setItem("minhasTarefas", JSON.stringify(dados));
+      mostrarTarefas();
+      desenharCalendario();
+      if(texto) mostrarMensagem(texto);
+    }
+
+    function mostrarMensagem(texto){
+      msg.innerText = texto;
+      msg.style.display = "block";
+      setTimeout(()=>{ msg.style.display = "none"; }, 2000);
+    }
+
+    function mesAnt(){ 
+      mesAtual--; 
+      if(mesAtual<0){ mesAtual=11; anoAtual--; }
+      desenharCalendario(); 
+    }
+
+    function mesProx(){ 
+      mesAtual++; 
+      if(mesAtual>11){ mesAtual=0; anoAtual++; }
+      desenharCalendario(); 
+    }
+
+    desenharCalendario();
+  </script>
+</body>
+</html>
+
+
