@@ -43,6 +43,8 @@
     <input type="text" id="novaTarefa" placeholder="Nova tarefa...">
     <button onclick="adicionarTarefa()">Adicionar</button>
     <ul id="listaTarefas"></ul>
+    <input type= "text" id="buscartarefa" placeholder="buscartarefa..">
+    <button onclick="buscartarefa()">buscar</button>
     <div id="mensagem"></div>
   </div>
 
@@ -139,8 +141,7 @@
           div.appendChild(indic);
         }
 
-        if(feriadosAno[chave]) div.classList.add("feriado"); // adiciona fundo azul claro para feriado
-
+        if(feriadosAno[chave]) div.classList.add("feriado"); 
         div.onclick = () => abrirDia(i);
         cal.appendChild(div);
       }
