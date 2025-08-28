@@ -256,6 +256,21 @@
       if(mesAtual>11){ mesAtual=0; anoAtual++; }
       desenharCalendario(); 
     }
+    
+    function buscarTarefa(){
+  const busca = document.getElementById("buscaTarefa").value.toLowerCase();
+  const lista = document.getElementById("listaTarefas");
+  const itens = lista.getElementsByTagName("li");
+
+  for(let i=0; i<itens.length; i++){
+    const texto = itens[i].innerText.toLowerCase();
+    if(texto.includes(busca)){
+      itens[i].style.display = ""; // mostra
+    } else {
+      itens[i].style.display = "none"; // esconde
+    }
+  }
+}
 
     desenharCalendario();
   </script>
