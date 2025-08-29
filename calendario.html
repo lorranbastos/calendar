@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!eDOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -11,7 +11,7 @@
     .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: auto; }
     .dia { background: #fff; padding: 10px; cursor: pointer; border-radius: 8px; position: relative; min-height: 50px; transition: 0.2s; }
     .dia:hover { background: #1d28a1; color: white; transform: scale(1.05); }
-    .feriado { background: #a1c4fd; } 
+    .feriado { background: #a1c4fd; } /* azul claro para feriado */
     .vazio { background: transparent; cursor: default; }
     .indic { font-size: 12px; background: #1d28a1; color: white; border-radius: 10px; padding: 2px 5px; position: absolute; bottom: 5px; right: 5px; }
     #tarefas { display: none; background: #f2f2f2; padding: 15px; border-radius: 8px; max-width: 350px; margin: 20px auto; text-align: left; }
@@ -23,6 +23,40 @@
     .acoes button { margin-left: 5px; }
     #mensagem { margin-top: 10px; font-size: 14px; font-weight: bold; color: #1d28a1; display: none; }
     #feriado { margin-top: 10px; font-size: 14px; font-weight: bold; color: #d62828; }
+
+    /* 🔎 ADIÇÃO: estilos da barra de pesquisa */
+    #pesquisa {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-align: left;
+      max-width: 250px;
+    }
+    #buscaTarefa {
+      width: 100%;
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #resultadoBusca {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      list-style: none;
+      padding: 5px;
+      font-size: 14px;
+    }
+    #resultadoBusca li {
+      padding: 4px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    #resultadoBusca li:hover {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 <body>
@@ -43,9 +77,13 @@
     <input type="text" id="novaTarefa" placeholder="Nova tarefa...">
     <button onclick="adicionarTarefa()">Adicionar</button>
     <ul id="listaTarefas"></ul>
-    <input type= "text" id="buscartarefa" placeholder="buscartarefa..">
-    <button onclick="buscartarefa()">buscar</button>
     <div id="mensagem"></div>
+  </div>
+
+  
+  <div id="pesquisa">
+    <input type="text" id="buscaTarefa" placeholder="🔎 Buscar tarefa...">
+    <ul id="resultadoBusca"></ul>
   </div>
 
   <script>
@@ -141,7 +179,8 @@
           div.appendChild(indic);
         }
 
-        if(feriadosAno[chave]) div.classList.add("feriado"); 
+        if(feriadosAno[chave]) div.classList.add("feriado"); // adiciona fundo azul claro para feriado
+
         div.onclick = () => abrirDia(i);
         cal.appendChild(div);
       }
@@ -256,23 +295,44 @@
       if(mesAtual>11){ mesAtual=0; anoAtual++; }
       desenharCalendario(); 
     }
-    
-    function buscarTarefa(){
-  const busca = document.getElementById("buscaTarefa").value.toLowerCase();
-  const lista = document.getElementById("listaTarefas");
-  const itens = lista.getElementsByTagName("li");
-
-  for(let i=0; i<itens.length; i++){
-    const texto = itens[i].innerText.toLowerCase();
-    if(texto.includes(busca)){
-      itens[i].style.display = ""; 
-    } else {
-      itens[i].style.display = "none"; 
-    }
-  }
-}
 
     desenharCalendario();
+
+   
+    const buscaInput = document.getElementById("buscaTarefa");
+    const resultadoBusca = document.getElementById("resultadoBusca");
+
+    function normalizar(txt){
+      return txt
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"");
+    }
+
+    buscaInput.addEventListener("input", ()=>{
+      const termo = normalizar(buscaInput.value);
+      resultadoBusca.innerHTML = "";
+      if(!termo) return;
+
+      for(const chave in dados){
+        dados[chave].forEach(tarefa=>{
+          if(normalizar(tarefa).includes(termo)){
+            const li = document.createElement("li");
+            li.innerText = tarefa + "  ("+chave+")";
+            li.onclick = ()=>{
+              const [ano,mes,dia] = chave.split("-");
+              anoAtual = parseInt(ano);
+              mesAtual = parseInt(mes)-1;
+              desenharCalendario();
+              abrirDia(parseInt(dia));
+              resultadoBusca.innerHTML = "";
+              buscaInput.value = "";
+            };
+            resultadoBusca.appendChild(li);
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>
