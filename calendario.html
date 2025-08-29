@@ -24,7 +24,7 @@
     #mensagem { margin-top: 10px; font-size: 14px; font-weight: bold; color: #1d28a1; display: none; }
     #feriado { margin-top: 10px; font-size: 14px; font-weight: bold; color: #d62828; }
 
-    /* 🔎 ADIÇÃO: estilos da barra de pesquisa */
+    
     #pesquisa {
       position: absolute;
       top: 20px;
@@ -83,7 +83,7 @@
   
   <div id="pesquisa">
     <input type="text" id="buscaTarefa" placeholder="🔎 Buscar tarefa...">
-    <ul id="resultadoBusca"></ul>
+    <ul id="resultadobusca"></ul>
   </div>
 
   <script>
@@ -179,7 +179,7 @@
           div.appendChild(indic);
         }
 
-        if(feriadosAno[chave]) div.classList.add("feriado"); // adiciona fundo azul claro para feriado
+        if(feriadosAno[chave]) div.classList.add("feriado"); 
 
         div.onclick = () => abrirDia(i);
         cal.appendChild(div);
