@@ -1,4 +1,4 @@
-<!eDOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -11,7 +11,7 @@
     .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: auto; }
     .dia { background: #fff; padding: 10px; cursor: pointer; border-radius: 8px; position: relative; min-height: 50px; transition: 0.2s; }
     .dia:hover { background: #1d28a1; color: white; transform: scale(1.05); }
-    .feriado { background: #a1c4fd; } /* azul claro para feriado */
+    .feriado { background: #a1c4fd; }
     .vazio { background: transparent; cursor: default; }
     .indic { font-size: 12px; background: #1d28a1; color: white; border-radius: 10px; padding: 2px 5px; position: absolute; bottom: 5px; right: 5px; }
     #tarefas { display: none; background: #f2f2f2; padding: 15px; border-radius: 8px; max-width: 350px; margin: 20px auto; text-align: left; }
@@ -23,7 +23,6 @@
     .acoes button { margin-left: 5px; }
     #mensagem { margin-top: 10px; font-size: 14px; font-weight: bold; color: #1d28a1; display: none; }
     #feriado { margin-top: 10px; font-size: 14px; font-weight: bold; color: #d62828; }
-
     
     #pesquisa {
       position: absolute;
@@ -80,10 +79,9 @@
     <div id="mensagem"></div>
   </div>
 
-  
   <div id="pesquisa">
     <input type="text" id="buscaTarefa" placeholder="🔎 Buscar tarefa...">
-    <ul id="resultadobusca"></ul>
+    <ul id="resultadoBusca"></ul>
   </div>
 
   <script>
@@ -298,41 +296,42 @@
 
     desenharCalendario();
 
-   
-    const buscaInput = document.getElementById("buscaTarefa");
-    const resultadoBusca = document.getElementById("resultadoBusca");
+    window.onload = function() {
+      const buscaInput = document.getElementById("buscaTarefa");
+      const resultadoBusca = document.getElementById("resultadoBusca");
 
-    function normalizar(txt){
-      return txt
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"");
-    }
-
-    buscaInput.addEventListener("input", ()=>{
-      const termo = normalizar(buscaInput.value);
-      resultadoBusca.innerHTML = "";
-      if(!termo) return;
-
-      for(const chave in dados){
-        dados[chave].forEach(tarefa=>{
-          if(normalizar(tarefa).includes(termo)){
-            const li = document.createElement("li");
-            li.innerText = tarefa + "  ("+chave+")";
-            li.onclick = ()=>{
-              const [ano,mes,dia] = chave.split("-");
-              anoAtual = parseInt(ano);
-              mesAtual = parseInt(mes)-1;
-              desenharCalendario();
-              abrirDia(parseInt(dia));
-              resultadoBusca.innerHTML = "";
-              buscaInput.value = "";
-            };
-            resultadoBusca.appendChild(li);
-          }
-        });
+      function normalizar(txt){
+        return txt
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g,"");
       }
-    });
+
+      buscaInput.addEventListener("input", ()=>{
+        const termo = normalizar(buscaInput.value);
+        resultadoBusca.innerHTML = "";
+        if(!termo) return;
+
+        for(const chave in dados){
+          dados[chave].forEach(tarefa=>{
+            if(normalizar(tarefa).includes(termo)){
+              const li = document.createElement("li");
+              li.innerText = tarefa + "  ("+chave+")";
+              li.onclick = ()=>{
+                const [ano,mes,dia] = chave.split("-");
+                anoAtual = parseInt(ano);
+                mesAtual = parseInt(mes)-1;
+                desenharCalendario();
+                abrirDia(parseInt(dia));
+                resultadoBusca.innerHTML = "";
+                buscaInput.value = "";
+              };
+              resultadoBusca.appendChild(li);
+            }
+          });
+        }
+      });
+    }
   </script>
 </body>
 </html>
