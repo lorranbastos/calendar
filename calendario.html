@@ -73,6 +73,7 @@
   <div id="tarefas">
     <h3 id="diaSelecionado">Dia X</h3>
     <div id="feriado"></div>
+    <input type="time" id="horaInput">
     <input type="text" id="novaTarefa" placeholder="Nova tarefa...">
     <button onclick="adicionarTarefa()">Adicionar</button>
     <ul id="listaTarefas"></ul>
@@ -90,6 +91,7 @@
     const diaSel = document.getElementById("diaSelecionado");
     const lista = document.getElementById("listaTarefas");
     const input = document.getElementById("novaTarefa");
+    const inputHora = document.getElementById("horaInput");
     const mesAno = document.getElementById("mesAno");
     const msg = document.getElementById("mensagem");
     const feriadoDiv = document.getElementById("feriado");
@@ -226,11 +228,13 @@
 
     function adicionarTarefa(){
       const texto = input.value.trim();
+      const hora = inputHora.value;
       if(!texto) return;
       const chave = `${anoAtual}-${mesAtual+1}-${diaAtual}`;
       if(!dados[chave]) dados[chave] = [];
-      dados[chave].push(texto);
+      dados[chave].push(hora ? `${hora} - ${texto}` : texto);
       input.value = "";
+      inputHora.value = "";
       salvar("Tarefa adicionada!", true);
     }
 
